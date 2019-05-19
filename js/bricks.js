@@ -47,10 +47,6 @@ class BrickContainer {
     }
 }
 
-
-// TODO think about having real brick instances instead of the current instanced actor approach
-// this would make collision detection easier and less intensive as I wouldnt have to calculate x and y with the position in the array
-// with real bricks I could use a flat array as as x and y will be stored inside the individual bricks
 // TODO implement functionality to load bricks out of a .txt file or an array for different levels
 // TODO ignore inputs when game is paused
 // TODO adjust num of blocks based on viewport width 

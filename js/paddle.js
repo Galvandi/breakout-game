@@ -22,7 +22,6 @@ class Paddle {
 
     }
     moveBy(x) {
-        // this.x += x;
         this.x += x;
         this.x = Math.min(Math.max(this.x, this.w/2), this.world.w - this.w/2);
     }
