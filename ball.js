@@ -7,49 +7,69 @@ class Ball {
         this.w = this.radius*2;
         this.h = this.radius*2; // necessary for all actors to have x,y,w,h to make generic collision detection possible in util.areColliding()
         this.color = "white";
-        this.velocity = [200, -250];
+        this.velocity = [50, -600];
+        this.maxSpeed = 600;
         this.resting = true;
+        this.ramboMode = false; // TODO refactor to place the rambomode flag into game class 
     }
     init(paddle, brickContainer) {
         this.paddle = paddle;
         this.brickContainer = brickContainer;
+        input.register("bounce", () => {
+            this.resting = false;
+            this.velocity[0] = Math.random() * 50;
+        });
     }
     initialPosition() {
             if (this.resting) {
                 this.x = this.paddle.x;
-            this.y = this.paddle.y - this.paddle.h; 
+            this.y = this.paddle.y - this.paddle.h/2 - this.radius;
         }
     }
-    // prevent ball from moving faster diagonally, not implemented right now, bc not working as expected
-    // get directionClamp() { 
-    //     if (Math.abs(this.velocity[0]) + Math.abs(this.velocity[1]) > 1) {
-    //         const normalized = util.normalize(this.velocity);
-    //         return util.normalize(this.velocity);
-    //     }
-    //     return this.velocity;
-    // }
     render() {
         this.initialPosition();
         this.world.ctx.beginPath();
         this.world.ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
-        this.world.ctx.fillStyle = this.color; 
-        this.world.ctx.fill();
+        this.world.ctx.fillStyle = this.color;
+        this.world.ctx.lineWidth = 3;
+        if (this.ramboMode) { this.world.ctx.stroke(); }
+        else { this.world.ctx.fill(); }
     }
     moveBy(x, y) {
         this.x += x;
         this.y += y;
     }
-    update(canvas) {
-        if (input.status.bounce) { this.resting = false;} // TODO differentiate buttons that are meant to be hold and that are not affected by keyup 
+    update() {
         if (this.resting) return;
+        this.wallCollider();
         this.paddleCollider();
         this.brickCollider();
 
-        
+        const norm = util.normalize(this.velocity);
+        const ramboMultiplier = this.ramboMode ? 1.25 : 1;
+        this.velocity[0] = (this.maxSpeed * norm[0] * ramboMultiplier);
+        this.velocity[1] = (this.maxSpeed * norm[1] * ramboMultiplier);
 
-        const offsetX = (this.velocity[0] /** this.directionClamp[0]*/) / this.world.fps;
-        const offsetY = (this.velocity[1] /** this.directionClamp[1]*/) / this.world.fps;
-        this.moveBy(offsetX, offsetY);
+        this.moveBy(this.velocity[0] / this.world.fps, this.velocity[1] / this.world.fps);
+    }
+    wallCollider() {
+        let message = "notColliding";
+        if (this.x + this.radius > this.world.w) {
+            message = "wallRight";
+            this.velocity[0] *= -1;
+        } else if (this.x - this.radius < 0) {
+            message = "wallLeft";
+            this.velocity[0] *= -1;
+        } else if (this.y + this.radius > this.world.h) {
+            message = "wallBottom";
+            this.velocity[1] *= -1;
+            messenger.send("playerLostALife");
+            this.resting = true;
+        } else if (this.y - this.radius < 0) {
+            message = "wallTop";
+            this.velocity[1] *= -1;
+        }
+        return message;
     }
     brickCollider() { 
         const len = this.brickContainer.bricks.length;
@@ -57,31 +77,31 @@ class Ball {
             const brick = this.brickContainer.bricks[i];
             let hitTheBrick = false;
 
-            if (util.areColliding(this, brick))  {
-                const relation = util.relativeVector(this, brick);
-            
-                // TODO fix collision, still wanky
-                if(brick.life > 0) {
-                    if(relation[1] > 20 && this.velocity[1] < 0) {
-                        this.velocity[1] *= -1; 
+            if (brick.life)  {
+                if(util.areColliding(this, brick)) {
+                    const relation = util.relativeVector(this, brick);
+                    if(relation[1] > 0 && this.velocity[1] < 0) {
+                        this.velocity[1] *= this.ramboMode ? 1 : -1;
                         hitTheBrick = true;
-                        console.log("hit bottom");
-                    } else if(relation[1] < -20 && this.velocity[1] > 0 ) {
-                        this.velocity[1] *= -1;
+                        // console.log("hit bottom");
+                    } else if(relation[1] < 0 && this.velocity[1] > 0 ) {
+                        this.velocity[1] *= this.ramboMode ? 1 : -1;
                         hitTheBrick = true;
-                        console.log("hit top");
-                    } else if(relation[0] > 20 && this.velocity[0] < 0) {
-                        this.velocity[0] *= -1;
+                        // console.log("hit top");
+                    } else if(relation[0] > 0 && this.velocity[0] < 0) {
+                        this.velocity[0] *= this.ramboMode ? 1 : -1;
                         hitTheBrick = true;
-                        console.log("hit right");
-                    } else if(relation[0] < -20 && this.velocity[0] > 0) {
-                        this.velocity[0] *= -1;
+                        // console.log("hit right");
+                    } else if(relation[0] < 0 && this.velocity[0] > 0) {
+                        this.velocity[0] *= this.ramboMode ? 1 : -1;
                         hitTheBrick = true;
-                        console.log("hit left");
+                        // console.log("hit left");
                     } 
 
                     if(hitTheBrick) {
-                        this.brickContainer.bricks[i].life = 0;
+                        brick.life = this.ramboMode ? 0 : brick.life-1;
+                        messenger.send("playerScore");
+                        messenger.send("hitBrick");
                         break;
                     }
                 } 
@@ -90,9 +110,17 @@ class Ball {
     }
     paddleCollider() {
         // returns a vector indicating the position of the ball in relation to the paddle
-        const relation = util.normalize(util.relativeVector(this, this.paddle)); 
+        const relation = util.relativeVector(this,this.paddle);
         if (util.areColliding(this, this.paddle) && this.velocity[1] > 0 && relation[1] < 0) {
+            // console.log(relation[0]);
+            const norm = util.normalize(this.velocity);
+            // console.log("ball speed",  Math.abs(this.velocity[0]) + Math.abs(this.velocity[1]));
+
             this.velocity[1] *= -1;
+            this.velocity[0] = (relation[0] / 75) * (this.maxSpeed);
+
+            // this.velocity[1] = this.velocity[1] * norm[1];
+            // this.velocity[0] = this.velocity[0] * norm[0];
         }
     }
 }
