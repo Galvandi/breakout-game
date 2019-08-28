@@ -13,6 +13,7 @@ class Game {
         this.maxRamboScore = 10;
         this.ramboColor = [0,20,20]; // TODO move ramboMode related variables where theyre needed
         this.paused = false;
+        this.ended = false;
 
         this.world = { // maybe add a list of all actors in the world
             canvas: this.canvas,
@@ -21,12 +22,13 @@ class Game {
             x: this.canvas.width/2,
             y: this.canvas.height/2,
             w: this.canvas.width,
-            h: this.canvas.height
+            h: this.canvas.height,
+            gameInstance: this
         };
         // create and init all the actors // TODO maybe move this to an Game.init() method
-        this.paddle = new Paddle(this.world, this.world.w/2, this.world.h-20, 120, 25, this.fps, this.ctx);
+        this.paddle = new Paddle(this.world, this.world.w/2, this.world.h-20, 90, 20, this.fps, this.ctx);
         this.brickContainer = new BrickContainer(this.world);
-        this.ball = new Ball(this.world, this.world.w/2, this.world.h/2, 12.5);
+        this.ball = new Ball(this.world, this.world.w/2, this.world.h/2, 10);
         this.brickContainer.init(25, 4, 3);
         this.ball.init(this.paddle, this.brickContainer);
     }
@@ -103,6 +105,7 @@ class Game {
         messenger.onMessage("exitRambo", () => {
             this.ball.ramboMode = false;
         });
+        messenger.onMessage("gameEnded", () => { this.ended = true; });
     }
     renderText() {
         // draw score

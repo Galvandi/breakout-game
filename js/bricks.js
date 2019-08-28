@@ -2,9 +2,9 @@ class BrickContainer {
     constructor(world) {
         this.world = world;
         this.bricks = [];
-        this.margin = 5;
-        this.marginTop = 120;
-        this.marginSides = 100;
+        this.margin = 4;
+        this.marginTop = 80;
+        this.marginSides = 80;
         this.colors = ["crimson", "goldenrod", "forestgreen"];
     }
     get numAliveBricks() {
@@ -13,7 +13,7 @@ class BrickContainer {
     init(amountX, amountY, life) {
         const availablePixels = this.world.w - (this.margin * (amountX + 1) + this.marginSides*2);
         const blockWidth = availablePixels / amountX;
-        const blockHeight = 30; // ! hardcoded blockheight
+        const blockHeight = 25; // ! hardcoded blockheight
 
         for(let y = 0; y < amountY; y++) {
             this.bricks.push([]);

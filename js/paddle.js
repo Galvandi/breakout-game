@@ -19,7 +19,6 @@ class Paddle {
         this.world.ctx.beginPath();
         this.world.ctx.arc(this.x + this.w/2 - this.h/2, this.y, this.h/2, 0, Math.PI*2);
         this.world.ctx.fill();
-
     }
     moveBy(x) {
         this.x += x;

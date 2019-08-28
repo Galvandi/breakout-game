@@ -43,7 +43,7 @@ class Ball {
         this.y += y;
     }
     update() {
-        if (this.initialPosition()) { return; }
+        if (this.initialPosition() || this.world.gameInstance.ended) { return; }
         this.wallCollider();
         this.paddleCollider();
         this.brickCollider();

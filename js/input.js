@@ -20,9 +20,13 @@ const input = {
                 const action = this.mappings[actionName];
 
                 if (action.type === "axis") { action.active = (evt.type === "keydown"); }
-                else if (evt.type === "keydown" && action.released) { action.listeners.forEach( fn => fn()); action.active = true; action.released = false; }
-                else { action.active = false; console.log(evt.type)}
-
+                else if (evt.type === "keydown" && action.released) { 
+                    action.listeners.forEach( fn => fn());
+                    action.active = true; 
+                    action.released = false; 
+                } else {
+                    action.active = false;
+                }
                 if (evt.type == "keyup" && action.type === "action") { action.released = true; }
             }
         };
