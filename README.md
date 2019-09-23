@@ -1,7 +1,7 @@
-# Breakout Game ([Demo](https://galvandi.github.io/breakout-game/))
+# Breakout Game ([Demo](https://andreas-schoch.github.io/breakout-game/))
 Build over a weekend in May 2019 as an exercise.
 
-![alt text](https://raw.githubusercontent.com/Galvandi/breakout-game/master/poster.jpg)
+![alt text](/poster.jpg?raw=true "Screenshot")
 
 ## Controls
 - **W** - push ball to start game
